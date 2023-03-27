@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Blood donations</string>
+    <string name="sign_up"><u>Sign up</u></string>
+    <string name="choose_image"><u>Choose Image</u></string>
 </resources>
