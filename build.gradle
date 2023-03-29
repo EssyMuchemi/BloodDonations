@@ -22,7 +22,7 @@ allprojects {
         google()
         mavenCentral()
 
-        //jcenter()
+        jcenter()
     }
 }
 

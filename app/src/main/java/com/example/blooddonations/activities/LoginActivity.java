@@ -1,7 +1,5 @@
 package com.example.blooddonations.activities;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +8,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -68,9 +69,9 @@ public class LoginActivity extends AppCompatActivity {
                 if (response.equals("success")) {
                     Toast.makeText(LoginActivity.this, response, Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                    /*PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
-                            .putString("number", number).apply();
                     PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
+                            .putString("number", number).apply();
+                    /*PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
                             .putString("city", response).apply();*/
                     LoginActivity.this.finish();
                 } else {
