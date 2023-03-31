@@ -59,9 +59,9 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ViewHold
                 } else {
                     ((Activity) context).requestPermissions(new String[]{CALL_PHONE}, 401);
                 }
-
             }
         });
+
         holder.shareButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -72,10 +72,8 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ViewHold
                                 .getNumber());
                 shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Hey, could you help here");
                 context.startActivity(Intent.createChooser(shareIntent, "Share..."));
-
             }
         });
-
     }
 
 
@@ -86,15 +84,16 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ViewHold
 
 
     class ViewHolder extends RecyclerView.ViewHolder {
+
         TextView message;
         ImageView imageView, callButton, shareButton;
 
         ViewHolder(final View itemView) {
             super(itemView);
-            message= itemView.findViewById(R.id.message);
-            imageView= itemView.findViewById(R.id.image);
-            callButton= itemView.findViewById(R.id.call_button);
-            shareButton= itemView.findViewById(R.id.share_button);
+            message = itemView.findViewById(R.id.message);
+            imageView = itemView.findViewById(R.id.image);
+            callButton = itemView.findViewById(R.id.call_button);
+            shareButton = itemView.findViewById(R.id.share_button);
         }
 
     }
