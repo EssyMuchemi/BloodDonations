@@ -13,6 +13,7 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -28,14 +29,19 @@ import androidx.preference.PreferenceManager;
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
-import com.androidnetworking.interfaces.StringRequestListener;
+import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.androidnetworking.interfaces.UploadProgressListener;
 import com.bumptech.glide.Glide;
 import com.example.blooddonations.R;
 import com.example.blooddonations.utils.EndPoints;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.net.URISyntaxException;
+
+;
 
 public class MakeRequestActivity extends AppCompatActivity {
 
@@ -51,67 +57,73 @@ public class MakeRequestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_make_request);
         AndroidNetworking.initialize(getApplicationContext());
-        messageText= findViewById(R.id.message);
-        chooseImageText=findViewById(R.id.choose_text);
-        postImage= findViewById(R.id.post_image);
-        submit_button=findViewById(R.id.submit_button);
-        submit_button.setOnClickListener(new View.OnClickListener() {
+        messageText = findViewById(R.id.message);
+        chooseImageText = findViewById(R.id.choose_text);
+        postImage = findViewById(R.id.post_image);
+        submit_button = findViewById(R.id.submit_button);
+        submit_button.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (isValid()){
-                    //code to upload this post
+                if (isValid()) {
+                    //code to upload this post.
                     uploadRequest(messageText.getText().toString());
                 }
-
             }
         });
 
-        chooseImageText.setOnClickListener(new View.OnClickListener() {
+        chooseImageText.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 //code to pick image
                 permission();
-
             }
         });
 
     }
-    private void pickImage(){
+
+
+    private void pickImage() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
         startActivityForResult(intent, 101);
     }
-    private void permission(){
-        if(PermissionChecker.checkSelfPermission(getApplicationContext(), READ_EXTERNAL_STORAGE)!= PermissionChecker.PERMISSION_GRANTED){
+
+
+    private void permission() {
+        if (PermissionChecker.checkSelfPermission(getApplicationContext(), READ_EXTERNAL_STORAGE)
+                != PermissionChecker.PERMISSION_GRANTED) {
             //asking for permission
             requestPermissions(new String[]{READ_EXTERNAL_STORAGE}, 401);
-        }else{
+        } else {
             //permission is already there
             pickImage();
         }
     }
 
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode== 401){
-            if(grantResults[0]== PermissionChecker.PERMISSION_GRANTED){
+        if (requestCode == 401) {
+            if (grantResults[0] == PermissionChecker.PERMISSION_GRANTED) {
                 //permission was granted
                 pickImage();
-            }else{
+            } else {
                 //permission not granted
                 showMessage("Permission Declined");
             }
         }
     }
 
-    private void uploadRequest(String message){
+
+    private void uploadRequest(String message) {
         //code to upload the message
-        String path= "";
+        String path = "";
         try {
-            path= getPath(imageUri);
-        } catch (URISyntaxException e){
-            showMessage("Wrong Uri");
+            path = getPath(imageUri);
+        } catch (URISyntaxException e) {
+            showMessage("wrong uri");
         }
         String number = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
                 .getString("number", "12345");
@@ -125,15 +137,22 @@ public class MakeRequestActivity extends AppCompatActivity {
                     @Override
                     public void onProgress(long bytesUploaded, long totalBytes) {
                         // do anything with progress
-                        long progress = (bytesUploaded/totalBytes)*100;
-                        chooseImageText.setText(String.valueOf(progress));
+                        long progress = (bytesUploaded / totalBytes) * 100;
+                        chooseImageText.setText(String.valueOf(progress+"%"));
                         chooseImageText.setOnClickListener(null);
                     }
                 })
-                .getAsString(new StringRequestListener() {
+                /*.getAsString(new StringRequestListener() {
                     @Override
                     public void onResponse(String response) {
-                        permission();
+                        response= "success";
+                        showMessage(response);
+                        chooseImageText.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                permission();
+                            }
+                        });
                     }
 
                     @Override
@@ -141,35 +160,59 @@ public class MakeRequestActivity extends AppCompatActivity {
                         showMessage(anError.getMessage());
 
                     }
+                });*/
+                .getAsJSONObject(new JSONObjectRequestListener() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            //response= "success";
+                            if(response.getBoolean("success")){
+                                showMessage("Successful");
+                                MakeRequestActivity.this.finish();
+                            }else{
+                                showMessage(response.getString("message"));
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onError(ANError anError) {
+
+                    }
                 });
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == 101 && resultCode == RESULT_OK){
-            if(data!=null){
-                imageUri= data.getData();
+        if (requestCode == 101 && resultCode == RESULT_OK) {
+            if (data != null) {
+                imageUri = data.getData();
                 Glide.with(getApplicationContext()).load(imageUri).into(postImage);
-
             }
         }
     }
 
-    private boolean isValid(){
-        if (messageText.getText().toString().isEmpty()){
-            showMessage("Message should not be empty");
+    private boolean isValid() {
+        if (messageText.getText().toString().isEmpty()) {
+            showMessage("Message shouldn't be empty");
             return false;
         }else if(imageUri==null){
-            showMessage("pick image");
+            showMessage("Pick Image");
             return false;
         }
         return true;
     }
-    
-    private void showMessage(String mag){
-        Toast.makeText(this, "", Toast.LENGTH_SHORT).show();
+
+
+    private void showMessage(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
+
+
     @SuppressLint("NewApi")
     private String getPath(Uri uri) throws URISyntaxException {
         final boolean needToCheckUri = Build.VERSION.SDK_INT >= 19;
@@ -237,4 +280,6 @@ public class MakeRequestActivity extends AppCompatActivity {
     public static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
+
+
 }

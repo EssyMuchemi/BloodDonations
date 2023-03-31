@@ -1,27 +1,43 @@
 package com.example.blooddonations.activities;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.androidnetworking.common.Method;
 import com.example.blooddonations.R;
 import com.example.blooddonations.adapters.RequestAdapter;
-import com.example.blooddonations.dataModels.requestDataModel;
+import com.example.blooddonations.dataModels.RequestDataModel;
+import com.example.blooddonations.utils.EndPoints;
+import com.example.blooddonations.utils.VolleySingleton;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private List<requestDataModel> requestDataModels;
+    private List<RequestDataModel> requestDataModels;
     private RequestAdapter requestAdapter;
 
     @Override
@@ -53,16 +69,42 @@ public class MainActivity extends AppCompatActivity {
         requestAdapter= new RequestAdapter(requestDataModels, this);
         recyclerView.setAdapter(requestAdapter);
         populateHomePage();
+        TextView pick_location = findViewById(R.id.pick_location);
+        String location = PreferenceManager.getDefaultSharedPreferences(this)
+                .getString("city", "no_city_found");
+        if (!location.equals("no_city_found")) {
+            pick_location.setText(location);
+        }
     }
     private void populateHomePage(){
-        requestDataModel requestDataModel= new requestDataModel("Welcome to the Blood Donations Application! Thank you for choosing to save lives. You have done a very important thing in helping humanity and may The Lord bless you abundantly. What goes around comes back around!", "https://cdn.pixabay.com/photo/2023/03/21/12/19/mountains-7867137_960_720.jpg");
-        requestDataModels.add(requestDataModel);
-        requestDataModels.add(requestDataModel);
-        requestDataModels.add(requestDataModel);
-        requestDataModels.add(requestDataModel);
-        requestDataModels.add(requestDataModel);
-        requestDataModels.add(requestDataModel);
-        requestDataModels.add(requestDataModel);
-        requestAdapter.notifyDataSetChanged();
+        final String city = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .getString("city", "no_city");
+        StringRequest stringRequest = new StringRequest(
+                Method.POST, EndPoints.get_requests, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Gson gson = new Gson();
+                Type type = new TypeToken<List<RequestDataModel>>() {
+                }.getType();
+                List<RequestDataModel> dataModels = gson.fromJson(response, type);
+                requestDataModels.addAll(dataModels);
+                requestAdapter.notifyDataSetChanged();
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, "Something went wrong:(", Toast.LENGTH_SHORT).show();
+                Log.d("VOLLEY", Objects.requireNonNull(error.getMessage()));
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("city", city);
+                return params;
+            }
+        };
+        VolleySingleton.getInstance(this).addToRequestQueue(stringRequest);
+
     }
 }

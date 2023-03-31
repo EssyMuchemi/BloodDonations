@@ -1,8 +1,5 @@
 package com.example.blooddonations.activities;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +7,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -65,8 +65,8 @@ public class RegisterActivity extends AppCompatActivity {
             public void onResponse(String response) {
                 response = "success";
                 if(response.equals("success")){
-                    //PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
-                            //putString("city", city).apply();
+                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
+                            .putString("city", city).apply();
                     Toast.makeText(RegisterActivity.this, response, Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(RegisterActivity.this, MainActivity.class));
                     RegisterActivity.this.finish();

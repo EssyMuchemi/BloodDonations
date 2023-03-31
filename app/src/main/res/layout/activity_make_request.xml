@@ -34,7 +34,7 @@
             android:maxLines="10"
             android:padding="10dp"
             android:hint="Message"
-            android:cursorVisible="false"
+            android:cursorVisible="true"
             android:background="@null"
             android:textColorHint="@android:color/black"
             android:gravity="top"
